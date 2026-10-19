@@ -94,3 +94,17 @@ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 ```bash
 tail -n 45 docs/server-setup.md
 ```
+
+## 9. Контейнеризация
+
+- **Способ установки Docker Engine:** из официального репозитория Docker (пакеты `docker-ce`, `docker-ce-cli`, `containerd.io`, `docker-buildx-plugin`, `docker-compose-plugin`).
+- **Версия Docker Engine:** 26.x (актуальная на момент установки).
+- **Участники группы docker:** пользователь `devops`.
+- **Расположение проекта на сервере:** `/home/devops/app`.
+- **Расположение файла `.env`:** `/home/devops/app/.env`, права доступа `600` (владелец `devops`). В Git не добавляется, шаблон `.env.example` не содержит секретов.
+- **Публикуемые порты и адреса:** 
+  - Приложение: `127.0.0.1:5000:5000` (доступно только на локальном интерфейсе для обратного прокси-сервера Nginx).
+  - СУБД PostgreSQL (порт 5432) наружу не публикуется, доступна приложению только внутри сети `backend`.
+- **Именованные тома:** `app_db_data` (хранит данные PostgreSQL в `/var/lib/postgresql/data`).
+- **Конфигурация обратного прокси-сервера:** Nginx принимает запросы по HTTPS на адрес `https://devops.local/app/` и проксирует их на `http://127.0.0.1:5000/`. Передаются заголовки `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`.
+
