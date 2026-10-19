@@ -56,6 +56,45 @@
 | 03-ssh-hardened | После усиления SSH |
 | 04-ufw-dns | После настройки UFW и локального домена |
 
+## 8. Веб-сервер
+
+**Устанавливаемый пакет:** `nginx` (из репозитория Ubuntu).
+
+**Путь к конфигурации ресурса:** `/etc/nginx/sites-available/devops-site`
+Активная конфигурация: символическая ссылка в `/etc/nginx/sites-enabled/devops-site`.
+Стандартный ресурс `/etc/nginx/sites-enabled/default` отключён.
+
+**Каталог ресурса:** `/var/www/devops-site`
+**Владелец:** `devops:devops`
+**Права:** каталоги — `755`, файлы — `644` (модель «владелец пишет, веб-сервер читает»).
+Права на сервере выставляются параметром `--chmod=D755,F644` при доставке через `rsync`.
+
+**Сертификат:** `/etc/ssl/certs/devops.crt` — права `644`, владелец `root`.
+**Закрытый ключ:** `/etc/ssl/private/devops.key` — права `600`, владелец `root`.
+
+**Команда формирования самоподписанного сертификата:**
+
+```bash
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/ssl/private/devops.key \
+  -out /etc/ssl/certs/devops.crt \
+  -subj "/CN=devops.local" \
+  -addext "subjectAltName=DNS:devops.local"
+```
+Срок действия: 365 дней.
+Имя ресурса проверяется по полю SAN (DNS:devops.local), поле CN не учитывается.
+
+Перенаправление: запросы по HTTP (порт 80) возвращают 301 Moved Permanently на https://$host$request_uri.
+Прослушиваемые порты: 80 (HTTP), 443 (HTTPS, TLSv1.2 и TLSv1.3).
+
+Сохранить: **Ctrl+O**, Enter. Выйти: **Ctrl+X**.
+
+### Проверь
+
+```bash
+tail -n 45 docs/server-setup.md
+```
+
 ## 9. Контейнеризация
 
 - **Способ установки Docker Engine:** из официального репозитория Docker (пакеты `docker-ce`, `docker-ce-cli`, `containerd.io`, `docker-buildx-plugin`, `docker-compose-plugin`).
@@ -68,3 +107,4 @@
   - СУБД PostgreSQL (порт 5432) наружу не публикуется, доступна приложению только внутри сети `backend`.
 - **Именованные тома:** `app_db_data` (хранит данные PostgreSQL в `/var/lib/postgresql/data`).
 - **Конфигурация обратного прокси-сервера:** Nginx принимает запросы по HTTPS на адрес `https://devops.local/app/` и проксирует их на `http://127.0.0.1:5000/`. Передаются заголовки `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`.
+
