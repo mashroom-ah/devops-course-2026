@@ -1,0 +1,6 @@
+---
+app_image: "ghcr.io/mashroom-ah/devops-ci-app"
+app_tag: "3b8b21e760843b21f1f98d7e1872b429adad3212"
+app_container_name: "devops-ci-app"
+app_host_port: 5000
+app_internal_port: 5000
