@@ -108,3 +108,21 @@ tail -n 45 docs/server-setup.md
 - **Именованные тома:** `app_db_data` (хранит данные PostgreSQL в `/var/lib/postgresql/data`).
 - **Конфигурация обратного прокси-сервера:** Nginx принимает запросы по HTTPS на адрес `https://devops.local/app/` и проксирует их на `http://127.0.0.1:5000/`. Передаются заголовки `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`.
 
+## 10. Ansible
+
+- **Расположение проекта:** `ansible/` (ветка `feature/ansible`)
+- **Управляющий узел:** WSL (Ubuntu), **управляемый узел:** VM `devops-vm` (Ubuntu 26.04)
+- **Inventory:** `bootstrap.ini` (первичный, по паролю `student`), `prod.ini` (по ключу `devops`)
+- **Учётные записи:** `bootstrap` — `student`; `prod` — `devops` (с NOPASSWD sudo)
+- **Роли и ответственность:**
+  - `base` — проверка ОС, установка пакетов, Docker Engine
+  - `ssh` — создание `devops`, SSH-ключ, sudo, hardening, UFW
+  - `nginx` — установка, reverse proxy, активация сайта
+  - `app` — загрузка образа GHCR, запуск контейнера, health-check
+- **Адрес образа GHCR:** `ghcr.io/mashroom-ah/devops-ci-app`
+- **Полный SHA:** `3b8b21e760843b21f1f98d7e1872b429adad3212`
+- **Порт контейнера:** `5000` (локально `127.0.0.1:5000`, внешне через Nginx на `80`)
+- **Health endpoint:** `/health` (возвращает `{"status":"ok"}`)
+- **Команды первичного запуска:** `ansible-playbook -i inventory/bootstrap.ini site.yml --ask-pass --ask-become-pass`
+- **Команда повторного запуска:** `ansible-playbook site.yml`
+- **Команда read-only аудита:** `ansible-playbook verify.yml`
